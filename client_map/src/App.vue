@@ -1,14 +1,14 @@
 <template>
   <div id="app">
-    <show-location :country="country" :distance="distance" />
-    <map-leaflet @newMarker="updateMarker" @newPosition="updatePosition" />
+    <show-location :country="country" :distance="distance"/>
+    <map-leaflet @newMarker="updateMarker"/>
   </div>
 </template>
 
 <script>
 import MapLeaflet from "./components/MapLeaflet.vue";
 import ShowLocation from "./components/ShowLocation.vue";
-
+import dateFormat from "dateformat"
 export default {
   name: "app",
   components: {
@@ -20,13 +20,15 @@ export default {
       position: null,
       distance: null,
       markerPosition: null,
-      country: null
+      country: null,
+      ip: null
     };
   },
   methods: {
     updateMarker(coords) {
       this.markerPosition = coords;
-      if(this.position) this.distance = this.getDistance(this.position, this.markerPosition);
+      if (this.position)
+        this.distance = this.getDistance(this.position, this.markerPosition);
       this.getCountry();
     },
     updatePosition(coords) {
@@ -55,10 +57,47 @@ export default {
     },
     //Get country with API geonames
     async getCountry() {
-      let res = await fetch(`http://api.geonames.org/countrySubdivisionJSON?lat=${this.markerPosition.latitude}&lng=${this.markerPosition.longitude}&username=mathildemichau`)
-      let json = await res.json()
-      this.country = json.countryCode
+      let res = await fetch(
+        `http://api.geonames.org/countrySubdivisionJSON?lat=${
+          this.markerPosition.latitude
+        }&lng=${this.markerPosition.longitude}&username=mathildemichau`
+      );
+      let json = await res.json();
+      this.country = json.countryCode;
     }
+  },
+  watch: {
+    //Store position for each time of the marker position
+    markerPosition: function(newPosition) {
+      console.log(dateFormat(Date.now(), "yyyy-MM-dd-hh:mm:ss"))
+      let dataToStore = {
+        ip: this.ip,
+        location: JSON.stringify(newPosition),
+      }
+      console.log(JSON.stringify(dataToStore))
+      fetch("http://localhost:8000/maprequests/", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dataToStore)
+      }).then(res => res.json()).then(console.log).catch(console.error);
+    }
+  },
+  mounted() {
+    // Get the user's current location
+    if (!this.position)
+      navigator.geolocation.getCurrentPosition(position => {
+        this.position = position.coords;
+      });
+
+    //Get users's IP address with http://www.geoplugin.net
+    fetch("http://www.geoplugin.net/json.gp")
+      .then(res => res.json())
+      .then(json => (this.ip = json.geoplugin_request))
+      .catch(console.error);
+
   }
 };
 </script>
@@ -72,8 +111,5 @@ export default {
   color: #2c3e50;
   width: 90%;
   margin: 0 auto;
-
 }
-
-
 </style>

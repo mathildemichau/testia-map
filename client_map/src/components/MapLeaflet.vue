@@ -14,9 +14,7 @@ export default {
     };
   },
   mounted() {
-    // Get the user's current location
-    if (!this.position)
-      navigator.geolocation.getCurrentPosition(this.showPosition);
+
 
     //Creation of the map by default centered on Toulouse
     this.map = L.map("leaflet-map", {
@@ -32,9 +30,6 @@ export default {
     this.map.on("click", this.addMarker);
   },
   methods: {
-    showPosition(position) {
-      this.$emit("newPosition", position.coords);
-    },
     addMarker(e) {
       let popup = L.popup();
       popup.setLatLng(e.latlng).openOn(this.map);
