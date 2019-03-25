@@ -1,5 +1,5 @@
 <template>
-  <div id="leaflet-map">map here</div>
+  <div id="leaflet-map"></div>
 </template>
 
 <script>
@@ -18,10 +18,10 @@ export default {
     if (!this.position)
       navigator.geolocation.getCurrentPosition(this.showPosition);
 
-    //Creation off the map by default centered on Toulouse
+    //Creation of the map by default centered on Toulouse
     this.map = L.map("leaflet-map", {
       center: [43.6044622, 1.4442469],
-      zoom: 3
+      zoom: 2
     });
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -46,7 +46,7 @@ export default {
 </script>
 <style>
 #leaflet-map {
-  height: 90vh;
+  height: 80vh;
 }
 .leaflet-popup-content-wrapper {
   background: no-repeat url("../assets/logoTestia.jpg") ;

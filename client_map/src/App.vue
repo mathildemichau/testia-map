@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <show-location/>
-    <map-leaflet @newMarker="updateMarker" @newPosition="updatePosition"/>
+    <show-location :country="country" :distance="distance" />
+    <map-leaflet @newMarker="updateMarker" @newPosition="updatePosition" />
   </div>
 </template>
 
@@ -48,15 +48,16 @@ export default {
           Math.sin(dLong / 2);
       let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       let d = (R * c) / 1000;
-      return d.toFixed(2);
+      return Number(d.toFixed(2));
     },
     rad(x) {
       return;
     },
+    //Get country with API geonames
     async getCountry() {
       let res = await fetch(`http://api.geonames.org/countrySubdivisionJSON?lat=${this.markerPosition.latitude}&lng=${this.markerPosition.longitude}&username=mathildemichau`)
       let json = await res.json()
-      this.country = json.countryName
+      this.country = json.countryCode
     }
   }
 };
@@ -69,6 +70,10 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  width: 90%;
+  margin: 0 auto;
+
 }
+
+
 </style>
