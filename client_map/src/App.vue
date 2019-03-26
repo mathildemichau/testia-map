@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <show-location :country="country" :distance="distance"/>
-    <map-leaflet @newMarker="updateMarker"/>
+    <map-leaflet @newMarker="updateMarker" :marker="markerPosition" v-if="markerPosition"/>
   </div>
 </template>
 
 <script>
 import MapLeaflet from "./components/MapLeaflet.vue";
 import ShowLocation from "./components/ShowLocation.vue";
-import dateFormat from "dateformat"
+import dateFormat from "dateformat";
 export default {
   name: "app",
   components: {
@@ -19,8 +19,8 @@ export default {
     return {
       position: null,
       distance: null,
-      markerPosition: null,
       country: null,
+      markerPosition: null,
       ip: null
     };
   },
@@ -30,9 +30,7 @@ export default {
       if (this.position)
         this.distance = this.getDistance(this.position, this.markerPosition);
       this.getCountry();
-    },
-    updatePosition(coords) {
-      this.position = coords;
+      this.storePosition(this.markerPosition);
     },
     //Calculates distance between 2 points
     getDistance(p1, p2) {
@@ -52,8 +50,22 @@ export default {
       let d = (R * c) / 1000;
       return Number(d.toFixed(2));
     },
-    rad(x) {
-      return;
+    //Store position for each time of the marker position
+    storePosition(newPosition) {
+      let dataToStore = {
+        ip: this.ip,
+        location: JSON.stringify(newPosition)
+      };
+      fetch("http://localhost:8000/maprequests/", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dataToStore)
+      })
+        .then(res => res.json())
+        .catch(console.error);
     },
     //Get country with API geonames
     async getCountry() {
@@ -66,31 +78,12 @@ export default {
       this.country = json.countryCode;
     }
   },
-  watch: {
-    //Store position for each time of the marker position
-    markerPosition: function(newPosition) {
-      console.log(dateFormat(Date.now(), "yyyy-MM-dd-hh:mm:ss"))
-      let dataToStore = {
-        ip: this.ip,
-        location: JSON.stringify(newPosition),
-      }
-      console.log(JSON.stringify(dataToStore))
-      fetch("http://localhost:8000/maprequests/", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(dataToStore)
-      }).then(res => res.json()).then(console.log).catch(console.error);
-    }
-  },
   mounted() {
     // Get the user's current location
-    if (!this.position)
-      navigator.geolocation.getCurrentPosition(position => {
-        this.position = position.coords;
-      });
+    navigator.geolocation.getCurrentPosition(position => {
+      this.position = position.coords;
+      this.distance = this.getDistance(this.position, this.markerPosition);
+    });
 
     //Get users's IP address with http://www.geoplugin.net
     fetch("http://www.geoplugin.net/json.gp")
@@ -98,6 +91,17 @@ export default {
       .then(json => (this.ip = json.geoplugin_request))
       .catch(console.error);
 
+    //Get the last location stored
+    fetch("http://localhost:8000/maprequests/")
+      .then(res => res.json())
+      .then(json => {
+        if (json.pop().location) {
+          let data = JSON.parse(json.pop().location);
+          this.markerPosition = data;
+          this.getCountry();
+        }
+      })
+      .catch(console.error);
   }
 };
 </script>
