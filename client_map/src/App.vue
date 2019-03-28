@@ -95,8 +95,8 @@ export default {
     fetch("http://localhost:8000/maprequests/")
       .then(res => res.json())
       .then(json => {
-        if (json.pop().location) {
-          let data = JSON.parse(json.pop().location);
+        let data = JSON.parse(json.pop().location);
+        if (data) {
           this.markerPosition = data;
           this.getCountry();
         }
