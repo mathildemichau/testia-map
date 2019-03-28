@@ -52,6 +52,7 @@ export default {
     },
     //Store position for each time of the marker position
     storePosition(newPosition) {
+      console.log("post", newPosition);
       let dataToStore = {
         ip: this.ip,
         location: JSON.stringify(newPosition)
@@ -65,6 +66,7 @@ export default {
         body: JSON.stringify(dataToStore)
       })
         .then(res => res.json())
+        .then("post", console.log)
         .catch(console.error);
     },
     //Get country with API geonames
@@ -95,8 +97,8 @@ export default {
     fetch("http://localhost:8000/maprequests/")
       .then(res => res.json())
       .then(json => {
-        if (json.pop().location) {
-          let data = JSON.parse(json.pop().location);
+        let data = JSON.parse(json.pop().location);
+        if (data) {
           this.markerPosition = data;
           this.getCountry();
         }
